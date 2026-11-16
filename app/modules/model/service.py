@@ -15,9 +15,10 @@ def partition(rows,handovers,max_gap=15):
             issues.extend({'line':r['line'],'code':'DUPLICATE','raw':r} for r in items if r is not winner)
     by_ship=defaultdict(list)
     for r in dedup:by_ship[r['shipment']].append(r)
-    segments=[];handover_issues=[]
+    segments=[];handover_issues=[];normalized={}
     for ship,hs in sorted(handovers.items()):
         hs=[dict(h,start=span(h['start'],h['end'])[0].isoformat(),end=span(h['start'],h['end'])[1].isoformat()) for h in hs]
+        normalized[ship]=hs
         if not hs:continue
         begin=min(datetime.fromisoformat(h['start']) for h in hs);end=max(datetime.fromisoformat(h['end']) for h in hs)
         rs=sorted(by_ship.get(ship,[]),key=lambda r:r['at'])
@@ -29,4 +30,4 @@ def partition(rows,handovers,max_gap=15):
             pair=next(((a,b) for a,b in zip(rs,rs[1:]) if datetime.fromisoformat(a['at'])<=left and right<=datetime.fromisoformat(b['at'])),None)
             known=bool(pair and (datetime.fromisoformat(pair[1]['at'])-datetime.fromisoformat(pair[0]['at'])).total_seconds()<=max_gap*60)
             segments.append({'shipment':ship,'start':left.isoformat(),'end':right.isoformat(),'owner':owner,'minutes':str(Decimal(str((right-left).total_seconds()))/60),'left':str(interpolate(*pair,left)) if known else None,'right':str(interpolate(*pair,right)) if known else None,'sources':[r['line'] for r in pair] if pair else []})
-    return {'rows':dedup,'issues':issues,'segments':segments,'handover_issues':handover_issues,'late_count':sum(1 for index,r in enumerate(rows) if any(p['shipment']==r['shipment'] and p['at']>r['at'] for p in rows[:index]))}
+    return {'rows':dedup,'issues':issues,'segments':segments,'handover_issues':handover_issues,'handovers':normalized,'late_count':sum(1 for index,r in enumerate(rows) if any(p['shipment']==r['shipment'] and p['at']>r['at'] for p in rows[:index]))}

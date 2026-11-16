@@ -5,4 +5,4 @@ PAGES=[('intake','轨迹采信'),('contract','探头校准'),('model','交接区
 templates=Jinja2Templates(directory=str(ROOT/'app/templates'))
 def page(request,slug):
     bundle=store.latest()
-    return templates.TemplateResponse(request=request,name=slug+'.html',context={'bundle':bundle,'pages':PAGES,'slug':slug,'title':dict(PAGES)[slug],'history':store.history()})
+    return templates.TemplateResponse(request=request,name=slug+'.html',context={'bundle':bundle,'pages':PAGES,'slug':slug,'title':dict(PAGES)[slug],'history':store.history(),'ledgers':store.ledgers()})
